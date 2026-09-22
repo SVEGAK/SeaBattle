@@ -184,3 +184,197 @@ TEST(PositionTest, ParseRowOutOfBounds) {
 TEST(PositionTest, ParseColOutOfBounds) {
     EXPECT_THROW(parse("(5, 11)"), std::logic_error);
 }
+
+
+//Ship tests
+
+TEST(ShipTest, Constructor_ValidHorizontalShip) {
+    Position pos(1, 1);
+    Ship ship(3, pos, Horizontal);
+    EXPECT_EQ(ship.size(), 3);
+    EXPECT_EQ(ship.row(), 1);
+    EXPECT_EQ(ship.col(), 1);
+    EXPECT_EQ(ship.direction(), Horizontal);
+}
+
+TEST(ShipTest, Constructor_ValidVerticalShip) {
+    Position pos(5, 5);
+    Ship ship(4, pos, Vertical);
+    EXPECT_EQ(ship.size(), 4);
+    EXPECT_EQ(ship.row(), 5);
+    EXPECT_EQ(ship.col(), 5);
+    EXPECT_EQ(ship.direction(), Vertical);
+}
+
+TEST(ShipTest, Constructor_CharInterfaceHorizontal) {
+    Ship ship(2, 'H', 3, 'C');
+    EXPECT_EQ(ship.size(), 2);
+    EXPECT_EQ(ship.row(), 3);
+    EXPECT_EQ(ship.col(), 3);
+    EXPECT_EQ(ship.direction(), Horizontal);
+}
+
+TEST(ShipTest, Constructor_CharInterfaceVertical) {
+    Ship ship(3, 'V', 1, 'A');
+    EXPECT_EQ(ship.size(), 3);
+    EXPECT_EQ(ship.row(), 1);
+    EXPECT_EQ(ship.col(), 1);
+    EXPECT_EQ(ship.direction(), Vertical);
+}
+
+TEST(ShipTest, Constructor_LowercaseDirection) {
+    Ship ship(2, 'h', 5, 'E');
+    EXPECT_EQ(ship.direction(), Horizontal);
+
+    Ship ship2(2, 'v', 5, 'E');
+    EXPECT_EQ(ship2.direction(), Vertical);
+}
+
+TEST(ShipTest, Constructor_DefaultDirectionIsHorizontal) {
+    Position pos(2, 2);
+    Ship ship(2, pos);
+    EXPECT_EQ(ship.direction(), Horizontal);
+}
+
+TEST(ShipTest, Constructor_InvalidSizeZero) {
+    Position pos(1, 1);
+    EXPECT_THROW(Ship(0, pos, Horizontal), std::logic_error);
+}
+
+TEST(ShipTest, Constructor_InvalidSizeNegative) {
+    Position pos(1, 1);
+    EXPECT_THROW(Ship(-1, pos, Horizontal), std::logic_error);
+}
+
+TEST(ShipTest, Constructor_InvalidSizeFive) {
+    Position pos(1, 1);
+    EXPECT_THROW(Ship(5, pos, Horizontal), std::logic_error);
+}
+
+TEST(ShipTest, Constructor_HorizontalExceedsRightBorder) {
+    Position pos(1, 9);
+    EXPECT_THROW(Ship(3, pos, Horizontal), std::logic_error);
+}
+
+TEST(ShipTest, Constructor_HorizontalFitsExactly) {
+    Position pos(1, 8);
+    Ship ship(3, pos, Horizontal);
+    EXPECT_NO_THROW();
+}
+
+TEST(ShipTest, Constructor_VerticalExceedsBottomBorder) {
+    Position pos(9, 1);
+    EXPECT_THROW(Ship(3, pos, Vertical), std::logic_error);
+}
+
+TEST(ShipTest, Constructor_VerticalFitsExactly) {
+    Position pos(8, 1);
+    Ship ship(3, pos, Vertical);
+    EXPECT_NO_THROW();
+}
+
+TEST(ShipTest, Constructor_InvalidDirectionChar) {
+    EXPECT_THROW(Ship(2, 'X', 1, 'A'), std::logic_error);
+    EXPECT_THROW(Ship(2, 'z', 1, 'A'), std::logic_error);
+}
+
+TEST(ShipTest, IsCollision_HorizontalFits) {
+    Ship ship(1, Position(1, 1), Horizontal);
+    Position pos(1, 1);
+    EXPECT_FALSE(ship.is_collision(3, pos, Horizontal));
+}
+
+TEST(ShipTest, IsCollision_HorizontalOutOfBounds) {
+    Ship ship(1, Position(1, 1), Horizontal);
+    Position pos(1, 9);
+    EXPECT_TRUE(ship.is_collision(3, pos, Horizontal));
+}
+
+TEST(ShipTest, IsCollision_VerticalFits) {
+    Ship ship(1, Position(1, 1), Horizontal);
+    Position pos(1, 1);
+    EXPECT_FALSE(ship.is_collision(4, pos, Vertical));
+}
+
+TEST(ShipTest, IsCollision_VerticalOutOfBounds) {
+    Ship ship(1, Position(1, 1), Horizontal);
+    Position pos(9, 1);
+    EXPECT_TRUE(ship.is_collision(3, pos, Vertical));
+}
+
+TEST(ShipTest, Rotate_HorizontalToVertical) {
+    Position pos(5, 5);
+    Ship ship(3, pos, Horizontal);
+    ship.rotate();
+    EXPECT_EQ(ship.direction(), Vertical);
+    EXPECT_EQ(ship.row(), 5);
+    EXPECT_EQ(ship.col(), 5);
+}
+
+TEST(ShipTest, Rotate_VerticalToHorizontal) {
+    Position pos(5, 5);
+    Ship ship(3, pos, Vertical);
+    ship.rotate();
+    EXPECT_EQ(ship.direction(), Horizontal);
+}
+
+TEST(ShipTest, Rotate_MultipleTimes) {
+    Position pos(5, 5);
+    Ship ship(2, pos, Horizontal);
+    ship.rotate();
+    EXPECT_EQ(ship.direction(), Vertical);
+    ship.rotate();
+    EXPECT_EQ(ship.direction(), Horizontal);
+    ship.rotate();
+    EXPECT_EQ(ship.direction(), Vertical);
+}
+
+
+TEST(ShipTest, Getters_Size1To4) {
+    for (int s = 1; s <= 4; ++s) {
+        Position pos(1, 1);
+        Ship ship(s, pos, Horizontal);
+        EXPECT_EQ(ship.size(), s);
+    }
+}
+
+TEST(ShipTest, Getters_RowCol) {
+    Ship ship(2, 'H', 7, 'D');
+    EXPECT_EQ(ship.row(), 7);
+    EXPECT_EQ(ship.col(), 4);
+}
+
+TEST(ShipTest, Constructor_ShipAtCornerHorizontal) {
+    Position pos(10, 10);
+    Ship ship(1, pos, Horizontal);
+    EXPECT_EQ(ship.row(), 10);
+    EXPECT_EQ(ship.col(), 10);
+}
+
+TEST(ShipTest, Constructor_ShipAtCornerVertical) {
+    Position pos(10, 10);
+    Ship ship(1, pos, Vertical);
+    EXPECT_EQ(ship.row(), 10);
+    EXPECT_EQ(ship.col(), 10);
+}
+
+TEST(ShipTest, Rotate_Size1Ship) {
+    Position pos(5, 5);
+    Ship ship(1, pos, Horizontal);
+    ship.rotate();
+    EXPECT_EQ(ship.direction(), Vertical);
+    ship.rotate();
+    EXPECT_EQ(ship.direction(), Horizontal);
+}
+
+TEST(ShipTest, Constructor_CharInterfaceRowBounds) {
+    EXPECT_THROW(Ship(1, 'H', 0, 'A'), std::logic_error);
+    EXPECT_THROW(Ship(1, 'H', 11, 'A'), std::logic_error);
+}
+
+TEST(ShipTest, Constructor_CharInterfaceColBounds) {
+    EXPECT_THROW(Ship(1, 'H', 1, '@'), std::logic_error);
+    EXPECT_THROW(Ship(1, 'H', 1, '['), std::logic_error);
+}
+
+//
