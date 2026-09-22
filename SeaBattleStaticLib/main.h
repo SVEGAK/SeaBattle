@@ -5,8 +5,7 @@
 #include <string>
 #include <cctype>
 
-const int Position::_max_row = 10;
-const int Position::_max_col = 10;
+
 
 class Position {
 private:
@@ -31,7 +30,8 @@ public:
     friend Position parse(const std::string& str);
     friend class Ship;
 };
-
+const int Position::_max_row = 10;
+const int Position::_max_col = 10;
 
 enum Direction { Horizontal, Vertical }; // положение корабля на карте
 
