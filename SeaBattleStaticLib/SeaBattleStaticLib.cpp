@@ -357,3 +357,6 @@ bool Player::check_ready() const noexcept {
         _ships_counts[2] == _max_ships_counts[2] &&
         _ships_counts[3] == _max_ships_counts[3]);
 }
+
+
+
