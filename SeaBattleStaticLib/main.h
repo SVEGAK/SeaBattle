@@ -4,8 +4,8 @@
 #include <iomanip>
 #include <string>
 #include <cctype>
-
-
+#include <vector>
+#include <iostream>
 
 class Position {
 private:
@@ -119,8 +119,41 @@ public:
         return _field[row - 1][col - 'A'];
     }
 
+    void set_char(int row, char col, char value) {
+        if (row < 1 || row > _n || col < 'A' || col >= 'A' + _m)
+            throw std::logic_error("Invalid input: incorrect position");
+        _field[row - 1][col - 'A'] = value;
+    }
 
-    friend std::string to_string(const GameField& gf);
+    friend std::string to_string(const GameField& gf, bool hide_ships);
 };
 
 
+
+enum State { Missed, BoatDestroyed, DestroyersDestroyed, CruisersDestroyed, BattleshipDestroyed, Hit };
+
+class Player {
+private:
+    GameField _gamefield;
+    int _ships_counts[4];
+    std::vector<Ship> _ships;
+
+    static const int _max_ships_counts[4];
+
+    
+    bool checkCollision(const Ship& ship) const;
+
+public:
+
+    Player();
+ 
+    void set_ship(const Ship& ship);
+
+    State set_action(int row, char col);
+
+    void show_field(bool hide_ships = false) const;
+
+    bool check_lose() const noexcept;
+
+    bool check_ready() const noexcept;
+};

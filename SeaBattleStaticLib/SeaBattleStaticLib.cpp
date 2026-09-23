@@ -131,7 +131,7 @@ void GameField::check_position(int row, char col) const {
 }
 void GameField::allocate_and_fill(char fill_char = ' ') {
     _field = new char* [_n];
-    for (int i = 0; i < _n; ++i) {
+    for (int i = 0; i < _n; i++) {
         _field[i] = new char[_m];
         for (int j = 0; j < _m; ++j) {
             _field[i][j] = fill_char;
@@ -141,7 +141,7 @@ void GameField::allocate_and_fill(char fill_char = ' ') {
 
 void GameField::copy_from(const GameField& other) {
     _field = new char* [_n];
-    for (int i = 0; i < _n; ++i) {
+    for (int i = 0; i < _n; i++) {
         _field[i] = new char[_m];
         for (int j = 0; j < _m; ++j) {
             _field[i][j] = other._field[i][j];
@@ -151,7 +151,7 @@ void GameField::copy_from(const GameField& other) {
 GameField::GameField(char** field, int n, int m) : _n(n), _m(m) {
     check_dimensions(n, m);
     _field = new char* [_n];
-    for (int i = 0; i < _n; ++i) {
+    for (int i = 0; i < _n; i++) {
         _field[i] = new char[_m];
         for (int j = 0; j < _m; ++j) {
             _field[i][j] = field[i][j];
@@ -159,7 +159,7 @@ GameField::GameField(char** field, int n, int m) : _n(n), _m(m) {
     }
 }
 
-std::string to_string(const GameField& gf) {
+std::string to_string(const GameField& gf, bool hide_ships = false) {
     std::string res;
 
     // верхняя строка: "  |A B C ...|"
@@ -172,16 +172,24 @@ std::string to_string(const GameField& gf) {
     }
     res += "|\n";
 
-    // Верхняя граница: "  +-------+"
+    // верхняя граница: "  +-------+"
     res += "  +";
     res += std::string(gf._m * 2 - 1, '-');
     res += "+\n";
 
-    // Строки поля
-    for (int i = 0; i < gf._n; ++i) {
+    // строки поля
+    for (int i = 0; i < gf._n; i++) {
         res += std::to_string(i + 1) + " |";
         for (int j = 0; j < gf._m; ++j) {
-            res += gf._field[i][j];
+            char c = gf._field[i][j];
+
+            //скрываем корабли если нужно
+            if (hide_ships && c == '*') {
+                c = ' '; 
+            }
+
+            res += c;
+
             if (j < gf._m - 1) {
                 res += " ";
             }
@@ -189,10 +197,162 @@ std::string to_string(const GameField& gf) {
         res += "|\n";
     }
 
-    // Нижняя граница (без завершающего \n, как в строгом формате)
+    // нижняя граница 
     res += "  +";
     res += std::string(gf._m * 2 - 1, '-');
     res += "+";
 
     return res;
+}
+const int Player::_max_ships_counts[4] = { 4, 3, 2, 1 };
+
+
+bool Player::checkCollision(const Ship& ship) const {
+    for (int i = 0; i < ship.size(); i++) {
+        int r = ship.row() + (ship.direction() == Vertical ? i : 0);
+        int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
+
+        // проверяем саму клетку и все 8 соседних (правило: корабли не касаются)
+        for (int dr = -1; dr <= 1; ++dr) {
+            for (int dc = -1; dc <= 1; ++dc) {
+                int check_r = r + dr;
+                char check_c = static_cast<char>('A' + (c - 1) + dc);
+                try {
+                    if (_gamefield.get(check_r, check_c) != ' ') {
+                        return true;
+                    }
+                }
+                catch (...) {
+                    // выход за границы поля при проверке окрестности игнорируем
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+
+Player::Player() : _gamefield(), _ships_counts{ 0, 0, 0, 0 } {}
+
+void Player::set_ship(const Ship& ship) {
+    int size = ship.size();
+
+    if (size < 1 || size > 4) {
+        throw std::logic_error("Invalid input: incorrect field");
+    }
+
+    if (_ships_counts[size - 1] >= _max_ships_counts[size - 1]) {
+        throw std::logic_error("Invalid input: incorrect field");
+    }
+
+    if (checkCollision(ship)) {
+        throw std::logic_error("Invalid input: incorrect field");
+    }
+
+    // размещение корабля на поле
+    for (int i = 0; i < size; i++) {
+        int r = ship.row() + (ship.direction() == Vertical ? i : 0);
+        int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
+        char col_char = static_cast<char>('A' + c - 1);
+
+        _gamefield.set(r, col_char);
+    }
+
+    _ships_counts[size - 1]++;
+    _ships.push_back(ship);
+}
+
+
+State Player::set_action(int row, char col) {
+    char current = ' ';
+    try {
+        current = _gamefield.get(row, col);
+    }
+    catch (...) {
+        throw std::logic_error("Invalid input: incorrect move");
+    }
+
+    if (current == 'X' || current == '.') {
+        throw std::logic_error("Invalid input: incorrect move");
+    }
+
+    if (current == ' ') {
+        _gamefield.set_char(row, col, '.'); 
+        return Missed;
+    }
+
+    if (current == '*') {
+        _gamefield.set_char(row, col, 'X');
+
+        // Ищем, какому кораблю принадлежит эта клетка
+        for (const Ship& ship : _ships) {
+            bool is_part = false;
+            for (int i = 0; i < ship.size(); i++) {
+                int r = ship.row() + (ship.direction() == Vertical ? i : 0);
+                int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
+                char c_char = static_cast<char>('A' + c - 1);
+                if (r == row && c_char == col) {
+                    is_part = true;
+                    break;
+                }
+            }
+
+            if (is_part) {
+                // проверяем, уничтожен ли этот корабль полностью
+                bool destroyed = true;
+                for (int i = 0; i < ship.size(); i++) {
+                    int r = ship.row() + (ship.direction() == Vertical ? i : 0);
+                    int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
+                    char c_char = static_cast<char>('A' + c - 1);
+
+                   
+                    if (_gamefield.get(r, c_char) != 'X') {
+                        destroyed = false;
+                        break;
+                    }
+                }
+
+                if (destroyed) {
+                    int size = ship.size();
+                    _ships_counts[size - 1]--;
+
+                    switch (size) {
+                    case 1: return BoatDestroyed;
+                    case 2: return DestroyersDestroyed;
+                    case 3: return CruisersDestroyed;
+                    case 4: return BattleshipDestroyed;
+                    default: return Hit;
+                    }
+                }
+                else {
+                    return Hit;
+                }
+            }
+        }
+    }
+
+    return Missed;
+}
+
+void Player::show_field(bool hide_ships) const {
+    std::cout << to_string(_gamefield, hide_ships) << "\n\n";
+
+    std::cout << "Ships Left:\n";
+    std::cout << "* - " << _ships_counts[0]
+        << " ** - " << _ships_counts[1]
+        << " *** - " << _ships_counts[2]
+        << " **** - " << _ships_counts[3] << "\n";
+}
+
+bool Player::check_lose() const noexcept {
+    return (_ships_counts[0] == 0 && _ships_counts[1] == 0 &&
+        _ships_counts[2] == 0 && _ships_counts[3] == 0);
+}
+
+bool Player::check_ready() const noexcept {
+    return (_ships_counts[0] == _max_ships_counts[0] &&
+        _ships_counts[1] == _max_ships_counts[1] &&
+        _ships_counts[2] == _max_ships_counts[2] &&
+        _ships_counts[3] == _max_ships_counts[3]);
 }
