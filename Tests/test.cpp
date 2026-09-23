@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "SeaBattleStaticLib.cpp"
-
+#include "GameField.h"
 
 //class Position
 TEST(PositionTest, DefaultConstructor) {
@@ -377,4 +377,101 @@ TEST(ShipTest, Constructor_CharInterfaceColBounds) {
     EXPECT_THROW(Ship(1, 'H', 1, '['), std::logic_error);
 }
 
-//
+//class GameField
+
+
+TEST(GameFieldTest, DefaultConstructor) {
+    GameField field;
+    EXPECT_EQ(field.get(1, 'A'), ' ');
+    EXPECT_EQ(field.get(10, 'J'), ' ');
+}
+
+TEST(GameFieldTest, PartialConstructor) {
+    GameField field(5, 5);
+    EXPECT_EQ(field.get(1, 'A'), ' ');
+    EXPECT_EQ(field.get(5, 'E'), ' ');
+}
+
+
+TEST(GameFieldTest, FullConstructor) {
+    char** data = new char* [3];
+    for (int i = 0; i < 3; ++i) {
+        data[i] = new char[3];
+        for (int j = 0; j < 3; ++j) {
+            data[i][j] = '*';
+        }
+    }
+
+    GameField field(data, 3, 3);
+    EXPECT_EQ(field.get(1, 'A'), '*');
+    EXPECT_EQ(field.get(3, 'C'), '*');
+
+    for (int i = 0; i < 3; ++i) {
+        delete[] data[i];
+    }
+    delete[] data;
+}
+
+
+TEST(GameFieldTest, CopyConstructor) {
+    GameField original(3, 3);
+    original.set(2, 'B');
+
+    GameField copy(original);
+    EXPECT_EQ(copy.get(2, 'B'), '*');
+    EXPECT_EQ(original.get(2, 'B'), '*');
+}
+
+TEST(GameFieldTest, SetMethod) {
+    GameField field(3, 3);
+    field.set(1, 'A');
+    EXPECT_EQ(field.get(1, 'A'), '*');
+}
+
+
+TEST(GameFieldTest, GetMethod) {
+    GameField field(3, 3);
+    EXPECT_EQ(field.get(1, 'A'), ' ');
+    field.set(2, 'B');
+    EXPECT_EQ(field.get(2, 'B'), '*');
+}
+
+
+TEST(GameFieldTest, ToString) {
+    GameField field(2, 2);
+    field.set(1, 'A');
+
+    std::string expected = "  |A B|\n  +---+\n1 |* | |\n2 | | |\n  +---+";
+    EXPECT_EQ(to_string(field), expected);
+}
+
+
+TEST(GameFieldTest, InvalidDimensions) {
+    EXPECT_THROW(GameField(0, 10), std::logic_error);
+    EXPECT_THROW(GameField(10, 0), std::logic_error);
+    EXPECT_THROW(GameField(26, 10), std::logic_error);
+    EXPECT_THROW(GameField(10, 26), std::logic_error);
+}
+
+
+TEST(GameFieldTest, InvalidPosition) {
+    GameField field(10, 10);
+
+    EXPECT_THROW(field.get(0, 'A'), std::logic_error);
+    EXPECT_THROW(field.get(11, 'A'), std::logic_error);
+    EXPECT_THROW(field.get(1, 'K'), std::logic_error);
+    EXPECT_THROW(field.set(0, 'A'), std::logic_error);
+    EXPECT_THROW(field.set(1, 'K'), std::logic_error);
+}
+
+TEST(GameFieldTest, MultipleSets) {
+    GameField field(3, 3);
+    field.set(1, 'A');
+    field.set(2, 'B');
+    field.set(3, 'C');
+
+    EXPECT_EQ(field.get(1, 'A'), '*');
+    EXPECT_EQ(field.get(2, 'B'), '*');
+    EXPECT_EQ(field.get(3, 'C'), '*');
+    EXPECT_EQ(field.get(1, 'B'), ' ');
+}

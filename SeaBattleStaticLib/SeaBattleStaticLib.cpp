@@ -116,3 +116,83 @@ void Ship::rotate() {
 
     _direction = next_dir;
 }
+
+
+
+void  GameField::check_dimensions(int n, int m) const {
+    if (n <= 0 || n > 25 || m <= 0 || m > 25) {
+        throw std::logic_error("Invalid input: incorrect field parameters");
+    }
+}
+void GameField::check_position(int row, char col) const {
+    if (row < 1 || row > _n || col < 'A' || col >= 'A' + _m) {
+        throw std::logic_error("Invalid input: incorrect position");
+    }
+}
+void GameField::allocate_and_fill(char fill_char = ' ') {
+    _field = new char* [_n];
+    for (int i = 0; i < _n; ++i) {
+        _field[i] = new char[_m];
+        for (int j = 0; j < _m; ++j) {
+            _field[i][j] = fill_char;
+        }
+    }
+}
+
+void GameField::copy_from(const GameField& other) {
+    _field = new char* [_n];
+    for (int i = 0; i < _n; ++i) {
+        _field[i] = new char[_m];
+        for (int j = 0; j < _m; ++j) {
+            _field[i][j] = other._field[i][j];
+        }
+    }
+}
+GameField::GameField(char** field, int n, int m) : _n(n), _m(m) {
+    check_dimensions(n, m);
+    _field = new char* [_n];
+    for (int i = 0; i < _n; ++i) {
+        _field[i] = new char[_m];
+        for (int j = 0; j < _m; ++j) {
+            _field[i][j] = field[i][j];
+        }
+    }
+}
+
+std::string to_string(const GameField& gf) {
+    std::string res;
+
+    // верхняя строка: "  |A B C ...|"
+    res += "  |";
+    for (int j = 0; j < gf._m; ++j) {
+        res += static_cast<char>('A' + j);
+        if (j < gf._m - 1) {
+            res += " ";
+        }
+    }
+    res += "|\n";
+
+    // Верхняя граница: "  +-------+"
+    res += "  +";
+    res += std::string(gf._m * 2 - 1, '-');
+    res += "+\n";
+
+    // Строки поля
+    for (int i = 0; i < gf._n; ++i) {
+        res += std::to_string(i + 1) + " |";
+        for (int j = 0; j < gf._m; ++j) {
+            res += gf._field[i][j];
+            if (j < gf._m - 1) {
+                res += " ";
+            }
+        }
+        res += "|\n";
+    }
+
+    // Нижняя граница (без завершающего \n, как в строгом формате)
+    res += "  +";
+    res += std::string(gf._m * 2 - 1, '-');
+    res += "+";
+
+    return res;
+}
