@@ -84,6 +84,7 @@ Ship::Ship(int size, char dir, int row, char col) :
             : std::toupper(dir) == 'V' ? Vertical
             : throw std::logic_error("Invalid input: incorrect ship parameters"))) {
 }
+Ship::Ship(const Ship& other): _size(other.size()),_coord(other._coord),_direction(other._direction){}
 bool Ship::is_collision(int size, const Position& coord, Direction dir) const noexcept { //True - выходит за пределы поля
     if (dir == Horizontal) {
         //Вертикальное положение корабля проверяется в конструкторе Position
@@ -129,7 +130,7 @@ void GameField::check_position(int row, char col) const {
         throw std::logic_error("Invalid input: incorrect position");
     }
 }
-void GameField::allocate_and_fill(char fill_char = ' ') {
+void GameField::allocate_and_fill(char fill_char) {
     _field = new char* [_n];
     for (int i = 0; i < _n; i++) {
         _field[i] = new char[_m];

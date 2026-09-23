@@ -25,7 +25,6 @@ public:
     int col() const noexcept { return _col; }
     void row(int new_row);
     void col(int new_col);
-
     friend std::string to_string(const Position& pos);
     friend Position parse(const std::string& str);
     friend class Ship;
@@ -46,7 +45,7 @@ public:
     Ship(int size, Position coord, Direction dir);
     Ship(int size, Position coord) : Ship(size, coord, Horizontal) {}
     Ship(int size, char dir, int row, char col);
-    Ship(const Ship& other) = delete;
+    Ship(const Ship& other);
     bool is_collision(int size, const Position& coord, Direction dir) const noexcept;
     void rotate();
 

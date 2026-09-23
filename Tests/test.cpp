@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "SeaBattleStaticLib.cpp"
-#include "GameField.h"
 
 //class Position
 TEST(PositionTest, DefaultConstructor) {
@@ -441,7 +440,7 @@ TEST(GameFieldTest, ToString) {
     GameField field(2, 2);
     field.set(1, 'A');
 
-    std::string expected = "  |A B|\n  +---+\n1 |* | |\n2 | | |\n  +---+";
+    std::string expected = "  |A B|\n  +---+\n1 |*  |\n2 |   |\n  +---+";
     EXPECT_EQ(to_string(field), expected);
 }
 
@@ -474,4 +473,169 @@ TEST(GameFieldTest, MultipleSets) {
     EXPECT_EQ(field.get(2, 'B'), '*');
     EXPECT_EQ(field.get(3, 'C'), '*');
     EXPECT_EQ(field.get(1, 'B'), ' ');
+}
+
+
+
+//Тесты Player
+TEST(PlayerTest, DefaultConstructorInitialState) {
+    Player player;
+    EXPECT_FALSE(player.check_ready());
+}
+
+TEST(PlayerTest, CheckReadyFalseWithPartialFleet) {
+    Player player;
+    Ship ship1(1, 'H', 1, 'A');
+    player.set_ship(ship1);
+    EXPECT_FALSE(player.check_ready());
+}
+
+TEST(PlayerTest, CheckReadyTrueWithFullFleet) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    player.set_ship(Ship(1, 'H', 4, 'A'));
+    player.set_ship(Ship(1, 'H', 7, 'A'));
+    player.set_ship(Ship(1, 'H', 10, 'A'));
+
+    player.set_ship(Ship(2, 'H', 1, 'D'));
+    player.set_ship(Ship(2, 'H', 5, 'D'));
+    player.set_ship(Ship(2, 'H', 8, 'D'));
+
+    player.set_ship(Ship(3, 'H', 3, 'E'));
+    player.set_ship(Ship(3, 'H', 7, 'G'));
+
+    player.set_ship(Ship(4, 'H', 10, 'E'));
+
+    EXPECT_TRUE(player.check_ready());
+}
+
+TEST(PlayerTest, SetShipValidSingleDeck) {
+    Player player;
+    Ship ship(1, 'V', 5, 'E');
+    EXPECT_NO_THROW(player.set_ship(ship));
+}
+
+TEST(PlayerTest, SetShipInvalidSize) {
+    Player player;
+    EXPECT_THROW(Ship ship(5, 'H', 1, 'A'), std::logic_error);
+}
+
+TEST(PlayerTest, SetShipExceedsMaxCount) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    player.set_ship(Ship(1, 'H', 3, 'A'));
+    player.set_ship(Ship(1, 'H', 5, 'A'));
+    player.set_ship(Ship(1, 'H', 7, 'A'));
+    Ship fifth_ship(1, 'H', 9, 'A');
+    EXPECT_THROW(player.set_ship(fifth_ship), std::logic_error);
+}
+
+TEST(PlayerTest, SetShipCollisionOverlap) {
+    Player player;
+    player.set_ship(Ship(2, 'H', 1, 'A'));
+    Ship overlapping_ship(1, 'H', 1, 'A');
+    EXPECT_THROW(player.set_ship(overlapping_ship), std::logic_error);
+}
+
+TEST(PlayerTest, SetShipCollisionTouchingDiagonally) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    Ship touching_ship(1, 'H', 2, 'B');
+    EXPECT_THROW(player.set_ship(touching_ship), std::logic_error);
+}
+
+TEST(PlayerTest, SetShipCollisionTouchingSide) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    Ship touching_ship(1, 'H', 1, 'B');
+    EXPECT_THROW(player.set_ship(touching_ship), std::logic_error);
+}
+
+TEST(PlayerTest, SetActionMiss) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    EXPECT_EQ(player.set_action(5, 'E'), Missed);
+}
+
+TEST(PlayerTest, SetActionHitNotDestroyed) {
+    Player player;
+    player.set_ship(Ship(2, 'H', 1, 'A'));
+    EXPECT_EQ(player.set_action(1, 'A'), Hit);
+}
+
+TEST(PlayerTest, SetActionDestroyBoat) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    EXPECT_EQ(player.set_action(1, 'A'), BoatDestroyed);
+}
+
+TEST(PlayerTest, SetActionDestroyDestroyer) {
+    Player player;
+    player.set_ship(Ship(2, 'H', 1, 'A'));
+    player.set_action(1, 'A');
+    EXPECT_EQ(player.set_action(1, 'B'), DestroyersDestroyed);
+}
+
+TEST(PlayerTest, SetActionDestroyCruiser) {
+    Player player;
+    player.set_ship(Ship(3, 'V', 1, 'A'));
+    player.set_action(1, 'A');
+    player.set_action(2, 'A');
+    EXPECT_EQ(player.set_action(3, 'A'), CruisersDestroyed);
+}
+
+TEST(PlayerTest, SetActionDestroyBattleship) {
+    Player player;
+    player.set_ship(Ship(4, 'H', 1, 'A'));
+    player.set_action(1, 'A');
+    player.set_action(1, 'B');
+    player.set_action(1, 'C');
+    EXPECT_EQ(player.set_action(1, 'D'), BattleshipDestroyed);
+}
+
+TEST(PlayerTest, SetActionInvalidMoveOutOfBounds) {
+    Player player;
+    EXPECT_THROW(player.set_action(0, 'A'), std::logic_error);
+    EXPECT_THROW(player.set_action(1, 'Z'), std::logic_error);
+    EXPECT_THROW(player.set_action(11, 'A'), std::logic_error);
+}
+
+TEST(PlayerTest, SetActionInvalidMoveAlreadyShot) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    player.set_action(5, 'E');
+    EXPECT_THROW(player.set_action(5, 'E'), std::logic_error);
+
+    player.set_action(1, 'A');
+    EXPECT_THROW(player.set_action(1, 'A'), std::logic_error);
+}
+
+TEST(PlayerTest, CheckLoseFalseAfterPartialDestruction) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    player.set_ship(Ship(1, 'H', 3, 'A'));
+    player.set_action(1, 'A');
+    EXPECT_FALSE(player.check_lose());
+}
+
+TEST(PlayerTest, CheckLoseTrueAfterFullDestruction) {
+    Player player;
+    player.set_ship(Ship(1, 'H', 1, 'A'));
+    player.set_ship(Ship(1, 'H', 3, 'A'));
+    player.set_ship(Ship(1, 'H', 5, 'A'));
+    player.set_ship(Ship(1, 'H', 7, 'A'));
+    player.set_action(1, 'A');
+    player.set_action(3, 'A');
+    player.set_action(5, 'A');
+    player.set_action(7, 'A');
+    EXPECT_TRUE(player.check_lose());
+}
+
+TEST(PlayerTest, ShipCountsDecreaseOnDestruction) {
+    Player player;
+    player.set_ship(Ship(2, 'H', 1, 'A'));
+    player.set_ship(Ship(2, 'H', 3, 'A'));
+    player.set_action(1, 'A');
+    player.set_action(1, 'B');
+    EXPECT_FALSE(player.check_lose());
 }
