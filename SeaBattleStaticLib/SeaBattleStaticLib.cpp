@@ -3,8 +3,6 @@
 
 #include "pch.h"
 #include "framework.h"
-#include "main.h"
-
 
 Position::Position(int row, int col) : _row(row), _col(col) {
     if (row < 1 || row > _max_row || col < 1 || col > _max_col) {

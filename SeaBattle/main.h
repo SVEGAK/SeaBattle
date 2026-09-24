@@ -1,5 +1,6 @@
 #pragma once
 #include "SeaBattleStaticLib.cpp"
-#include "main.h"
+#include "framework.h"
 int SeaBattleGameFuction(){
+
 }
