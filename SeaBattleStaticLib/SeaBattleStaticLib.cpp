@@ -341,8 +341,8 @@ void Player::show_field(bool hide_ships,bool is_input_scenario) const {
     std::cout << to_string(_gamefield, hide_ships) << "\n\n";
     if (is_input_scenario) {
         std::cout << "Ships Left to input:\n";
-        std::cout << "* - " << (3 -_ships_counts[0])
-            << " ** - " << (2 - _ships_counts[1])
+        std::cout << "* - " << (4 -_ships_counts[0])
+            << " ** - " << (3 - _ships_counts[1])
             << " *** - " << (2 - _ships_counts[2])
             << " **** - " << (1 - _ships_counts[3]) << "\n";
 

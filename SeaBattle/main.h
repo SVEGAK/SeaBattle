@@ -7,6 +7,24 @@
 #include "SeaBattleStaticLib.cpp"
 #include "framework.h"
 
+
+
+
+
+
+
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");      // Для Windows
+#else
+    system("clear");    // Для Linux / macOS
+#endif
+}
+//Пауза
+void waitSeconds(int seconds) {
+    std::this_thread::sleep_for(std::chrono::seconds(seconds));
+}
 void printSetupInstructions() {
     system("chcp 65001");system("cls");
     std::cout << "=================================================\n";
@@ -42,6 +60,7 @@ void setupUserFleet(Game& game) {
             // Пытаемся добавить корабль. Если формат или позиция неверны, 
             // user_add_ship выбросит std::logic_error
             game.user_add_ship(input);
+            clearScreen();
             std::cout << "Корабль успешно размещен!\n";
 
             std::cout << "\nВаше текущее поле:\n";
@@ -77,17 +96,19 @@ void runInteractiveMatch(Game& game) {
                 if (state == Missed) {
                     std::cout << "Промах!\n";
                     userHit = false;
-                    clearScreen();
                 }
                 else {
+                    
                     std::cout << "Попадание!\n";
                     userHit = true;
                 }
             }
             catch (const std::logic_error& e) {
                 std::cout << "[ОШИБКА] " << e.what() << "\n";
+
                 continue; // Не прерываем цикл, даем пользователю ввести координаты заново
             }
+            waitSeconds(2);
             clearScreen();
             game.show_game_window(); // Обновляем экран после каждого действия
 
@@ -99,9 +120,7 @@ void runInteractiveMatch(Game& game) {
         bool compHit = false;
         do {
             std::cout << "\n--- Ход компьютера ---\n";
-            // Небольшая задержка для реалистичности (опционально)
-            std::this_thread::sleep_for(std::chrono::milliseconds(800));
-
+            waitSeconds(2);
             State state = game.computer_move();
 
             if (state == Missed) {
@@ -111,8 +130,10 @@ void runInteractiveMatch(Game& game) {
             else {
                 std::cout << "Компьютер попал!\n";
                 compHit = true;
+                
             }
-
+            waitSeconds(2);
+            clearScreen();
             game.show_game_window(); // Обновляем экран
 
         } while (compHit && !game.is_end()); // Если компьютер попал, он ходит снова
