@@ -178,8 +178,11 @@ std::string to_string(const GameField& gf, bool hide_ships = false) {
 
     // строки поля
     for (int i = 0; i < gf._n; i++) {
-        res += std::to_string(i + 1) + " |";
-        for (int j = 0; j < gf._m; ++j) {
+        if (i <= 8){ res += std::to_string(i + 1) + " |"; }
+        else {
+            res += std::to_string(i + 1) + "|";
+        }
+        for (int j = 0; j < gf._m; j++) {
             char c = gf._field[i][j];
 
             //скрываем корабли если нужно
@@ -334,14 +337,25 @@ State Player::set_action(int row, char col) {
     return Missed;
 }
 
-void Player::show_field(bool hide_ships) const {
+void Player::show_field(bool hide_ships,bool is_input_scenario) const {
     std::cout << to_string(_gamefield, hide_ships) << "\n\n";
+    if (is_input_scenario) {
+        std::cout << "Ships Left to input:\n";
+        std::cout << "* - " << (3 -_ships_counts[0])
+            << " ** - " << (2 - _ships_counts[1])
+            << " *** - " << (2 - _ships_counts[2])
+            << " **** - " << (1 - _ships_counts[3]) << "\n";
 
-    std::cout << "Ships Left:\n";
-    std::cout << "* - " << _ships_counts[0]
-        << " ** - " << _ships_counts[1]
-        << " *** - " << _ships_counts[2]
-        << " **** - " << _ships_counts[3] << "\n";
+    }
+    else {
+        std::cout << "Ships Left:\n";
+        std::cout << "* - " << _ships_counts[0]
+            << " ** - " << _ships_counts[1]
+            << " *** - " << _ships_counts[2]
+            << " **** - " << _ships_counts[3] << "\n";
+
+    }
+    
 }
 
 bool Player::check_lose() const noexcept {
@@ -577,14 +591,18 @@ bool Game::is_end() const noexcept {
 }
 void Game::show_game_window() const {
     std::cout << "= COMPUTER GAME FIELD =\n\n";
-    _computer.show_field(true); // true = скрыть корабли
+    _computer.show_field(true,false); // true = скрыть корабли
 
     std::cout << "\n=== YOUR PLAY FIELD ===\n\n";
-    _user.show_field(false); // false = показать корабли
+    _user.show_field(false,false); // false = показать корабли
     std::cout << std::endl;
 }
 
-
+void Game::show_game_window_when_input() const {
+    std::cout << "\n=== YOUR PLAY FIELD ===\n\n";
+    _user.show_field(false,true); // false = показать корабли
+    std::cout << std::endl;
+}
 
 void Game::start() {
     std::string user_input, comp_input, dummy;

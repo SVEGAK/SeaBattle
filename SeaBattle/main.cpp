@@ -1,4 +1,4 @@
 #include "main.h"
-void main() {
-
+int main() {
+    return SeaBattleGameFunction();
 }

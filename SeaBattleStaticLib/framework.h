@@ -7,7 +7,7 @@
 #include <vector>
 #include <iostream>
 #include <random>
-//#define UNIT_TEST_GAME
+#define UNIT_TEST_GAME
 class Position {
 private:
     int _row;
@@ -151,7 +151,7 @@ public:
 
     State set_action(int row, char col);
 
-    void show_field(bool hide_ships = false) const;
+    void show_field(bool hide_ships = false, bool is_input_scenario = false) const;
 
     bool check_lose() const noexcept;
 
@@ -185,7 +185,11 @@ public:
 
     bool is_end() const noexcept;
     void show_game_window() const;
+    void show_game_window_when_input() const;
 #endif
     Game() = default;
     void start();
+    
+    bool isUserReady() const noexcept { return _user.check_ready(); }
+    bool isUserWinner() const noexcept { return _computer.check_lose(); }
 };
