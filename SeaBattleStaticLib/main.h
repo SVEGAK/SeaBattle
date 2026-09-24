@@ -6,6 +6,7 @@
 #include <cctype>
 #include <vector>
 #include <iostream>
+#include <random>
 
 class Position {
 private:

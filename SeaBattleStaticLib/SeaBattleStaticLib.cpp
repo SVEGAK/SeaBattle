@@ -360,3 +360,208 @@ bool Player::check_ready() const noexcept {
 
 
 
+
+void Game::user_init(const std::string& input) {
+    std::istringstream iss(input);
+    int size, row;
+    char col, dir;
+
+    // ожидаем формат: "размер строка колонка направление"
+    while (iss >> size >> row >> col >> dir) {
+        _user.set_ship(Ship(size, dir, row, col));
+    }
+
+    if (!_user.check_ready()) {
+        throw std::logic_error("Invalid input: incorrect field");
+    }
+}
+
+
+
+void Game::computer_init(const std::string& input) {
+    if (!input.empty()) {//Если будет передана не пустая строка - заполняем по ней
+        std::istringstream iss(input);
+        int size, row;
+        char col, dir;
+        while (iss >> size >> row >> col >> dir) {
+            _computer.set_ship(Ship(size, dir, row, col));
+        }
+        if (!_computer.check_ready()) {
+            throw std::logic_error("Invalid input: incorrect field");
+        }
+        return;
+    }
+
+    // Случайная расстановка
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::uniform_int_distribution<int> row_dist(1, 10); //гереатор строки (1 - 10) 
+    std::uniform_int_distribution<int> col_dist(0, 9); //генератор колонок
+    std::uniform_int_distribution<int> dir_dist(0, 1); //генератор направления
+
+    const char directions[] = { 'H', 'V' };
+
+    // конфигурация флота: {размер, количество}
+    const std::vector<std::pair<int, int>> fleet_config = {
+        {4, 1}, {3, 2}, {2, 3}, {1, 4}
+    };
+
+    for (const auto& config : fleet_config) {
+        int size = config.first;
+        int count = config.second;
+
+        for (int i = 0; i < count; i++) {
+            bool placed = false;
+            int attempts = 0;
+            const int max_attempts = 10000; // количество попыток ограничено
+
+            while (!placed && attempts < max_attempts) {
+                int r = row_dist(gen);
+                char c = static_cast<char>('A' + col_dist(gen));
+                char d = directions[dir_dist(gen)];
+
+                try {
+                    // Пытаемся поставить корабль. 
+                    // Если он вылезает за границы или касается других, set_ship выбросит исключение,
+                    // которое мы ловим и просто пробуем новые координаты.
+                    _computer.set_ship(Ship(size, d, r, c));
+                    placed = true;
+                }
+                catch (const std::logic_error&) {
+                    attempts++;
+                }
+            }
+
+            // Если за 10000 попыток не удалось поставить корабль
+            if (!placed) {
+                throw std::logic_error("Invalid input: incorrect field");
+            }
+        }
+    }
+}
+
+
+
+State Game::user_move(const std::string& input) {
+    std::istringstream iss(input);
+    int row;
+    char col;
+
+    if (!(iss >> row >> col)) {
+        throw std::logic_error("Invalid input: incorrect move");
+    }
+
+    return _computer.set_action(row, col);
+}
+
+State Game::computer_move() {
+    // левая диагональ
+    for (int i = 1; i <= 10; i++) {
+        char c = static_cast<char>('A' + i - 1);
+        try {
+            return _computer.set_action(i, c);
+        }
+        catch (...) {
+            // клетка уже обстреляна
+        }
+    }
+
+    // правая диагональ 
+    for (int i = 1; i <= 10; i++) {
+        char c = static_cast<char>('A' + (10 - i));
+        try {
+            return _computer.set_action(i, c);
+        }
+        catch (...) {
+            // Клетка уже обстреляна
+        }
+    }
+
+    //оставшиеся ячейки подряд рядами
+    for (int r = 1; r <= 10; r++) {
+        for (char c = 'A'; c <= 'J'; c++) {
+            try {
+                return _computer.set_action(r, c);
+            }
+            catch (...) {
+                // Клетка уже обстреляна
+            }
+        }
+    }
+
+    throw std::logic_error("Invalid input: incorrect move");
+}
+
+
+
+bool Game::is_end() const noexcept {
+    return _user.check_lose() || _computer.check_lose();
+}
+
+void Game::show_game_window() const {
+    std::cout << "= COMPUTER GAME FIELD =\n\n";
+    _computer.show_field(true); // true = скрыть корабли
+
+    std::cout << "\n=== YOUR PLAY FIELD ===\n\n";
+    _user.show_field(false); // false = показать корабли
+    std::cout << std::endl;
+}
+
+
+
+void Game::start() {
+    std::string user_input, comp_input, dummy;
+
+    std::getline(std::cin, user_input);
+    std::getline(std::cin, dummy);
+    std::getline(std::cin, comp_input);
+
+    try {
+        user_init(user_input);
+        computer_init(comp_input);
+    }
+    catch (const std::logic_error& e) {
+        std::cerr << e.what() << "\n";
+        return;
+    }
+
+    show_game_window();
+
+
+    while (!is_end()) {
+        
+        while (!is_end()) {
+            std::string move_input;
+            std::getline(std::cin, move_input);
+
+            State u_state = user_move(move_input);
+            show_game_window();
+
+            if (u_state == Missed) {
+                break; // передаем ход пк
+            }
+            
+        }
+
+        if (is_end()) break;
+
+        while (!is_end()) {
+            State c_state = computer_move();
+            show_game_window();
+
+            if (c_state == Missed) {
+                break; // передаем ход юзеру
+            }
+           
+        }
+    }
+
+    show_game_window();
+    if (_computer.check_lose()) {
+        std::cout << "USER WIN!\n";
+    }
+    else {
+        std::cout << "COMPUTER WIN!\n";
+    }
+}
