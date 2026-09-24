@@ -165,6 +165,7 @@ private:
     Player _computer;
     #ifndef UNIT_TEST_GAME
     void user_init(const std::string& input);
+    void user_add_ship(const std::string& input);
     void computer_init(const std::string& input);
 
     State user_move(const std::string& input);
@@ -176,6 +177,7 @@ private:
 public:
     #ifdef UNIT_TEST_GAME
         void user_init(const std::string& input);
+        void user_add_ship(const std::string& input);
         void computer_init(const std::string& input);
 
         State user_move(const std::string& input);

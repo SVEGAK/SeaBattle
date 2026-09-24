@@ -361,16 +361,94 @@ bool Player::check_ready() const noexcept {
 
 
 
+void Game::user_add_ship(const std::string& input) {
+    std::istringstream iss(input);
+    int size, row;
+    char col, dir;
+
+    // проверяем что ввод не пустой
+    if (input.empty() || iss.fail()) {
+        throw std::logic_error("Пустой ввод. Формат: размер строка колонка направление (например: 1 1 A H)");
+    }
+
+    // пытаемся считать параметры
+    if (!(iss >> size >> row >> col >> dir)) {
+        throw std::logic_error("Неверный формат ввода. Ожидается: размер строка колонка направление (например: 1 1 A H)");
+    }
+
+    std::string remaining;
+    if (iss >> remaining) {
+        throw std::logic_error("Лишние данные после корабля. Вводите только один корабль за раз");
+    }
+
+    if (size < 1 || size > 4) {
+        throw std::logic_error("Недопустимый размер корабля: " + std::to_string(size) + ". Допустимые значения: 1-4");
+    }
+
+    char dir_upper = std::toupper(static_cast<unsigned char>(dir));
+    if (dir_upper != 'H' && dir_upper != 'V') {
+        throw std::logic_error("Недопустимое направление: '" + std::string(1, dir) + "'. Используйте 'H' (горизонтально) или 'V' (вертикально)");
+    }
+
+    if (row < 1 || row > 10) {
+        throw std::logic_error("Недопустимый номер строки: " + std::to_string(row) + ". Допустимые значения: 1-10");
+    }
+
+    char col_upper = std::toupper(static_cast<unsigned char>(col));
+    if (col_upper < 'A' || col_upper > 'J') {
+        throw std::logic_error("Недопустимая колонка: '" + std::string(1, col) + "'. Допустимые значения: A-J");
+    }
+
+    try {
+        _user.set_ship(Ship(size, dir_upper, row, col_upper));
+    }
+    catch (const std::logic_error& e) {
+        std::string error_msg = e.what();
+
+        // уточняем сообщение об ошибке
+        if (error_msg.find("incorrect field") != std::string::npos) {
+            if (error_msg.find("collision") != std::string::npos ||
+                error_msg.find("кас") != std::string::npos) {
+                throw std::logic_error("Корабль пересекается или касается другого корабля. Выберите другую позицию");
+            }
+            if (error_msg.find("out of bounds") != std::string::npos ||
+                error_msg.find("границ") != std::string::npos) {
+                throw std::logic_error("Корабль выходит за границы поля. Проверьте координаты и направление");
+            }
+            throw std::logic_error("Невозможно разместить корабль в указанной позиции");
+        }
+
+        throw; // Пробрасываем оригинальное исключение, если не распознали
+    }
+}
+
 void Game::user_init(const std::string& input) {
     std::istringstream iss(input);
     int size, row;
     char col, dir;
 
-    // ожидаем формат: "размер строка колонка направление"
+    int ship_count = 0;
+
+    // Ожидаем формат: "размер строка колонка направление" для каждого корабля
     while (iss >> size >> row >> col >> dir) {
-        _user.set_ship(Ship(size, dir, row, col));
+        ship_count++;
+
+        try {
+            _user.set_ship(Ship(size, dir, row, col));
+        }
+        catch (const std::logic_error& e) {
+            throw std::logic_error("Ошибка при размещении корабля #" + std::to_string(ship_count) +
+                " (" + std::to_string(size) + " " + std::to_string(row) +
+                " " + col + " " + dir + "): " + e.what());
+        }
     }
 
+    // Проверяем, что были введены данные
+    if (ship_count == 0) {
+        throw std::logic_error("Не введено ни одного корабля");
+    }
+
+    // Проверяем готовность флота
     if (!_user.check_ready()) {
         throw std::logic_error("Invalid input: incorrect field");
     }
