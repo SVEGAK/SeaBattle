@@ -639,3 +639,162 @@ TEST(PlayerTest, ShipCountsDecreaseOnDestruction) {
     player.set_action(1, 'B');
     EXPECT_FALSE(player.check_lose());
 }
+
+//Тесты Game
+
+TEST(GameTest, DefaultConstructor) {
+    Game game;
+    EXPECT_FALSE(game.is_end());
+}
+
+TEST(GameTest, IsEndInitiallyFalse) {
+    Game game;
+    EXPECT_FALSE(game.is_end());
+}
+
+TEST(GameTest, UserInit_ValidFullFleet) {
+    Game game;
+    // безопасная расстановка без касаний
+    std::string fleet = "1 1 A H 1 1 D H 1 1 G H 1 1 J H "
+        "2 3 A H 2 3 E H 2 3 I H "
+        "3 5 A H 3 5 G H "
+        "4 7 D H";
+    EXPECT_NO_THROW(game.user_init(fleet));
+}
+
+TEST(GameTest, UserInit_InsufficientShipsThrows) {
+    Game game;
+    EXPECT_THROW(game.user_init("1 1 A H"), std::logic_error);
+}
+
+TEST(GameTest, UserInit_InvalidFormatThrows) {
+    Game game;
+    EXPECT_THROW(game.user_init("invalid input string"), std::logic_error);
+}
+
+TEST(GameTest, UserInit_OverlappingShipsThrows) {
+    Game game;
+    EXPECT_THROW(game.user_init("1 1 A H 1 1 A V"), std::logic_error);
+}
+
+TEST(GameTest, ComputerInit_ValidFleet) {
+    Game game;
+    std::string fleet = "1 1 A H 1 1 D H 1 1 G H 1 1 J H "
+        "2 3 A H 2 3 E H 2 3 I H "
+        "3 5 A H 3 5 G H "
+        "4 7 D H";
+    EXPECT_NO_THROW(game.computer_init(fleet));
+}
+
+TEST(GameTest, ComputerInit_OverlappingShipsThrows) {
+    Game game;
+    EXPECT_THROW(game.computer_init("2 1 A H 1 1 A H"), std::logic_error);
+}
+
+TEST(GameTest, UserMove_Miss) {
+    Game game;
+    game.computer_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    // стрельба в пустую клетку
+    EXPECT_EQ(game.user_move("1 A"), Missed);
+}
+
+TEST(GameTest, UserMove_Hit) {
+    Game game;
+    game.computer_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    // стрельба по двухпалубному кораблю
+    EXPECT_EQ(game.user_move("5 A"), Hit);
+}
+
+TEST(GameTest, UserMove_DestroyBoat) {
+    Game game;
+    game.computer_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    // уничтожение однопалубного корабля
+    EXPECT_EQ(game.user_move("3 A"), BoatDestroyed);
+}
+
+TEST(GameTest, UserMove_InvalidCoordinatesThrows) {
+    Game game;
+    game.computer_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    EXPECT_THROW(game.user_move("0 A"), std::logic_error);
+    EXPECT_THROW(game.user_move("1 Z"), std::logic_error);
+}
+
+TEST(GameTest, UserMove_AlreadyShotThrows) {
+    Game game;
+    game.computer_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    game.user_move("1 A");
+    // повторный выстрел в ту же клетку
+    EXPECT_THROW(game.user_move("1 A"), std::logic_error);
+}
+
+TEST(GameTest, ComputerMove_Miss) {
+    Game game;
+    game.user_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    // компьютер стреляет в пустую клетку на диагонали
+    EXPECT_EQ(game.computer_move(), Missed);
+}
+
+TEST(GameTest, ComputerMove_Hit) {
+    Game game;
+    game.user_init("1 1 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    // компьютер попадает в корабль на первой клетке диагонали
+    EXPECT_EQ(game.computer_move(), BoatDestroyed);
+}
+
+TEST(GameTest, ComputerMove_DestroyBoat) {
+    Game game;
+    game.user_init("1 1 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    EXPECT_EQ(game.computer_move(), BoatDestroyed);
+}
+
+TEST(GameTest, ComputerMove_SkipsAlreadyShot) {
+    Game game;
+    game.user_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    game.computer_move();
+    // компьютер пропускает уже обстрелянные клетки
+    EXPECT_NO_THROW(game.computer_move());
+}
+
+
+TEST(GameTest, IsEnd_FalseDuringActiveGame) {
+    Game game;
+    game.user_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+    game.computer_init("1 3 A H 1 3 D H 1 3 G H 1 3 J H "
+        "2 5 A H 2 5 E H 2 5 I H "
+        "3 7 A H 3 7 G H "
+        "4 9 D H");
+   
+    game.user_move("5 A");
+    // игра продолжается если флот не уничтожен полностью
+    EXPECT_FALSE(game.is_end());
+}

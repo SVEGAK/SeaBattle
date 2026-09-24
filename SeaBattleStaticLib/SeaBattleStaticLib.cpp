@@ -460,7 +460,7 @@ State Game::computer_move() {
     for (int i = 1; i <= 10; i++) {
         char c = static_cast<char>('A' + i - 1);
         try {
-            return _computer.set_action(i, c);
+            return _user.set_action(i, c);
         }
         catch (...) {
             // клетка уже обстреляна
@@ -471,7 +471,7 @@ State Game::computer_move() {
     for (int i = 1; i <= 10; i++) {
         char c = static_cast<char>('A' + (10 - i));
         try {
-            return _computer.set_action(i, c);
+            return _user.set_action(i, c);
         }
         catch (...) {
             // Клетка уже обстреляна
@@ -482,7 +482,7 @@ State Game::computer_move() {
     for (int r = 1; r <= 10; r++) {
         for (char c = 'A'; c <= 'J'; c++) {
             try {
-                return _computer.set_action(r, c);
+                return _user.set_action(r, c);
             }
             catch (...) {
                 // Клетка уже обстреляна
@@ -496,9 +496,9 @@ State Game::computer_move() {
 
 
 bool Game::is_end() const noexcept {
-    return _user.check_lose() || _computer.check_lose();
+    // Вернет true, только если один true, а другой false
+    return _user.check_lose() != _computer.check_lose();
 }
-
 void Game::show_game_window() const {
     std::cout << "= COMPUTER GAME FIELD =\n\n";
     _computer.show_field(true); // true = скрыть корабли

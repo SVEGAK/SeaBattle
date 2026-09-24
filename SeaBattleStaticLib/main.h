@@ -7,7 +7,7 @@
 #include <vector>
 #include <iostream>
 #include <random>
-
+#define UNIT_TEST_GAME
 class Position {
 private:
     int _row;
@@ -163,7 +163,7 @@ class Game {
 private:
     Player _user;
     Player _computer;
-
+    #ifndef UNIT_TEST_GAME
     void user_init(const std::string& input);
     void computer_init(const std::string& input);
 
@@ -172,8 +172,18 @@ private:
 
     bool is_end() const noexcept;
     void show_game_window() const;
-
+    #endif
 public:
+    #ifdef UNIT_TEST_GAME
+        void user_init(const std::string& input);
+        void computer_init(const std::string& input);
+
+        State user_move(const std::string& input);
+        State computer_move();
+
+        bool is_end() const noexcept;
+        void show_game_window() const;
+    #endif
     Game() = default;
     void start();
 };
