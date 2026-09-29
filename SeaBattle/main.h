@@ -4,16 +4,11 @@
 #include <thread>
 #include <chrono>
 
-#include "SeaBattleStaticLib.cpp"
-#include "framework.h"
-
-
-
-
-
-
-
-
+#include "Game.cpp"
+#include "GameField.cpp"
+#include "Player.cpp"
+#include "Position.cpp"
+#include "Ship.cpp"
 void clearScreen() {
 #ifdef _WIN32
     system("cls");      // Для Windows

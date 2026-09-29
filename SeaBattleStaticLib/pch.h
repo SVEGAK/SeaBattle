@@ -8,6 +8,9 @@
 #define PCH_H
 
 // Добавьте сюда заголовочные файлы для предварительной компиляции
-#include "framework.h"
-
+#include "Game.h"
+#include "GameField.h"
+#include "Player.h"
+#include "Ship.h"
+#include "Position.h"
 #endif //PCH_H

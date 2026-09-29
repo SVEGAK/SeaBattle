@@ -1,6 +1,10 @@
 #include "pch.h"
-#include "SeaBattleStaticLib.cpp"
-#include "framework.h"
+
+#include "Game.cpp"
+#include "GameField.cpp"
+#include "Player.cpp"
+#include "Position.cpp"
+#include "Ship.cpp"
 
 //class Position
 TEST(PositionTest, DefaultConstructor) {
