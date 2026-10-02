@@ -41,21 +41,14 @@ void Game::user_add_ship(const std::string& input) {
     try {
         _user.set_ship(Ship(size, dir_upper, row, col_upper));
     }
+    catch (const std::out_of_range& e) {
+        throw std::logic_error("The ship is going beyond the field boundaries. Check the coordinates and direction.");
+    }
+    catch (const std::invalid_argument& e) {
+        throw std::logic_error("The ship intersects or touches another ship. Choose another position.");
+    }
     catch (const std::logic_error& e) {
-        std::string error_msg = e.what();
-
-        // уточняем сообщение об ошибке
-        if (error_msg.find("incorrect field") != std::string::npos) {
-            if (error_msg.find("collision") != std::string::npos){
-                throw std::logic_error("The ship intersects or touches another ship. Choose another position.");
-            }
-            if (error_msg.find("out of bounds") != std::string::npos){
-                throw std::logic_error("The ship is going beyond the field boundaries. Check the coordinates and direction.");
-            }
-            throw std::logic_error("It is impossible to place the ship in the specified position.");
-        }
-
-        throw; // Пробрасываем оригинальное исключение, если не распознали
+        throw; // пробрасываем остальное
     }
 }
 

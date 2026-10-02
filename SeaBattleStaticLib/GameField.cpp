@@ -56,14 +56,14 @@ std::string to_string(const GameField& gf, bool hide_ships = false) {
             res += std::to_string(i + 1) + "|";
         }
         for (int j = 0; j < gf._m; j++) {
-            char c = gf._field[i][j];
+            char ship_column = gf._field[i][j];
 
             //скрываем корабли если нужно
-            if (hide_ships && c == '*') {
-                c = ' ';
+            if (hide_ships && ship_column == '*') {
+                ship_column = ' ';
             }
 
-            res += c;
+            res += ship_column;
 
             if (j < gf._m - 1) {
                 res += " ";
