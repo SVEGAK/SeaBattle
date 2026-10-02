@@ -24,15 +24,6 @@ private:
     // глубокое копирование из другого объекта
     void copy_from(const GameField& other);
 
-
-    // Освобождение памяти
-    void destroy() noexcept {
-        for (int i = 0; i < _n; ++i) {
-            delete[] _field[i];
-        }
-        delete[] _field;
-    }
-
 public:
 
     GameField() : _n(10), _m(10) {
@@ -51,7 +42,10 @@ public:
     }
 
     ~GameField() {
-        destroy();
+        for (int i = 0; i < _n; ++i) {
+            delete[] _field[i];
+        }
+        delete[] _field;
     }
 
 
