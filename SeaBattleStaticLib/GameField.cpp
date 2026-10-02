@@ -20,15 +20,6 @@ void GameField::allocate_and_fill(char fill_char) {
     }
 }
 
-void GameField::copy_from(const GameField& other) {
-    _field = new char* [_n];
-    for (int i = 0; i < _n; i++) {
-        _field[i] = new char[_m];
-        for (int j = 0; j < _m; ++j) {
-            _field[i][j] = other._field[i][j];
-        }
-    }
-}
 GameField::GameField(char** field, int n, int m) : _n(n), _m(m) {
     check_dimensions(n, m);
     _field = new char* [_n];

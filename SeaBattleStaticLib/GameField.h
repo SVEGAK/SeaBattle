@@ -38,7 +38,13 @@ public:
     GameField(char** field, int n, int m);
 
     GameField(const GameField& other) : _n(other._n), _m(other._m) {
-        copy_from(other);
+        _field = new char* [_n];
+        for (int i = 0; i < _n; i++) {
+            _field[i] = new char[_m];
+            for (int j = 0; j < _m; ++j) {
+                _field[i][j] = other._field[i][j];
+            }
+        }
     }
 
     ~GameField() {
