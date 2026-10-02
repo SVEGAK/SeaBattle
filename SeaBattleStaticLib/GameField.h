@@ -21,9 +21,6 @@ private:
     void allocate_and_fill(char fill_char = ' ');
 
 
-    // глубокое копирование из другого объекта
-    void copy_from(const GameField& other);
-
 public:
 
     GameField() : _n(10), _m(10) {
