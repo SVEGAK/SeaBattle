@@ -2,17 +2,16 @@
 #include "Player.h"
 const int Player::_max_ships_counts[4] = { 4, 3, 2, 1 };
 
-
 bool Player::checkCollision(const Ship& ship) const {
     for (int i = 0; i < ship.size(); i++) {
-        int r = ship.row() + (ship.direction() == Vertical ? i : 0);
-        int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
+        int row = ship.calc_ship_row_with_shift(i);
+        int column = ship.calc_ship_col_with_shift(i);
 
         // проверяем саму клетку и все 8 соседних (правило: корабли не касаются)
-        for (int dr = -1; dr <= 1; ++dr) {
-            for (int dc = -1; dc <= 1; ++dc) {
-                int check_r = r + dr;
-                char check_c = static_cast<char>('A' + (c - 1) + dc);
+        for (int diag_row = -1; diag_row <= 1; diag_row++) {
+            for (int diag_col = -1; diag_col <= 1; diag_col++) {
+                int check_r = row + diag_row;
+                char check_c = static_cast<char>('A' + (column - 1) + diag_col);
                 try {
                     if (_gamefield.get(check_r, check_c) != ' ') {
                         return true;
@@ -48,11 +47,11 @@ void Player::set_ship(const Ship& ship) {
 
     // размещение корабля на поле
     for (int i = 0; i < size; i++) {
-        int r = ship.row() + (ship.direction() == Vertical ? i : 0);
-        int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
-        char col_char = static_cast<char>('A' + c - 1);
+        int ship_row = ship.calc_ship_row_with_shift(i);
+        int ship_column = ship.calc_ship_col_with_shift(i);
+        char col_char = static_cast<char>('A' + ship_column - 1);
 
-        _gamefield.set(r, col_char);
+        _gamefield.set(ship_row, col_char);
     }
 
     _ships_counts[size - 1]++;
@@ -61,49 +60,49 @@ void Player::set_ship(const Ship& ship) {
 
 
 State Player::set_action(int row, char col) {
-    char current = ' ';
+    char current_action = ' ';
     try {
-        current = _gamefield.get(row, col);
+        current_action = _gamefield.get(row, col);
     }
     catch (...) {
         throw std::logic_error("Invalid input: incorrect move");
     }
 
-    if (current == 'X' || current == '.') {
+    if (current_action == 'X' || current_action == '.') {
         throw std::logic_error("Invalid input: incorrect move");
     }
 
-    if (current == ' ') {
+    if (current_action == ' ') {
         _gamefield.set_char(row, col, '.');
         return Missed;
     }
 
-    if (current == '*') {
+    if (current_action == '*') {
         _gamefield.set_char(row, col, 'X');
 
         // Ищем, какому кораблю принадлежит эта клетка
         for (const Ship& ship : _ships) {
-            bool is_part = false;
+            bool is_part_of_ship = false;
             for (int i = 0; i < ship.size(); i++) {
-                int r = ship.row() + (ship.direction() == Vertical ? i : 0);
-                int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
-                char c_char = static_cast<char>('A' + c - 1);
-                if (r == row && c_char == col) {
-                    is_part = true;
+                int ship_row = ship.calc_ship_row_with_shift(i);
+                int ship_col = ship.calc_ship_col_with_shift(i);
+                char char_column = static_cast<char>('A' + ship_col - 1);
+                if (ship_row == row && char_column == col) {
+                    is_part_of_ship = true;
                     break;
                 }
             }
 
-            if (is_part) {
+            if (is_part_of_ship) {
                 // проверяем, уничтожен ли этот корабль полностью
                 bool destroyed = true;
                 for (int i = 0; i < ship.size(); i++) {
-                    int r = ship.row() + (ship.direction() == Vertical ? i : 0);
-                    int c = ship.col() + (ship.direction() == Horizontal ? i : 0);
-                    char c_char = static_cast<char>('A' + c - 1);
+                    int ship_row = ship.calc_ship_row_with_shift(i);
+                    int ship_col = ship.calc_ship_col_with_shift(i);
+                    char char_column = static_cast<char>('A' + ship_col - 1);
 
 
-                    if (_gamefield.get(r, c_char) != 'X') {
+                    if (_gamefield.get(ship_row, char_column) != 'X') {
                         destroyed = false;
                         break;
                     }
@@ -163,3 +162,4 @@ bool Player::check_ready() const noexcept {
         _ships_counts[2] == _max_ships_counts[2] &&
         _ships_counts[3] == _max_ships_counts[3]);
 }
+

@@ -21,4 +21,10 @@ public:
     Direction direction() const noexcept { return _direction; }
     int row() const noexcept { return _coord.row(); }
     int col() const noexcept { return _coord.col(); }
+    int calc_ship_row_with_shift(int shift) const noexcept {
+        return _coord.row() + (_direction == Vertical ? shift : 0);
+    };
+    int calc_ship_col_with_shift(int shift) const noexcept {
+        return _coord.col() + (_direction == Horizontal ? shift : 0);
+    };
 };
