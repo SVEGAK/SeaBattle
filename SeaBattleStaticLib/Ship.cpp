@@ -1,4 +1,3 @@
-#pragma once
 #include "Ship.h"
 
 Ship::Ship(int size, Position coord, Direction dir) {

@@ -1,4 +1,4 @@
-#pragma once
+
 #include "GameField.h"
 void  GameField::check_dimensions(int n, int m) const {
     if (n <= 0 || n > 25 || m <= 0 || m > 25) {

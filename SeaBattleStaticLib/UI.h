@@ -17,15 +17,15 @@ void waitSeconds(int seconds) {
 void printSetupInstructions() {
     system("chcp 65001");system("cls");
     std::cout << "=================================================\n";
-    std::cout << "          ДОБРО ПОЖАЛОВАТЬ В МОРСКОЙ БОЙ         \n";
+    std::cout << "          WELCOME TO SEABATTLE                   \n";
     std::cout << "=================================================\n";
-    std::cout << "Вам нужно расставить 10 кораблей:\n";
-    std::cout << "  - 1 четырёхпалубный (****)\n";
-    std::cout << "  - 2 трёхпалубных (***), (***)\n";
-    std::cout << "  - 3 двухпалубных (**), (**), (**)\n";
-    std::cout << "  - 4 однопалубных (*), (*), (*), (*)\n\n";
-    std::cout << "Формат ввода: размер строка колонка направление\n";
-    std::cout << "Пример: 4 1 A H  (4-палубный, 1-я строка, колонка A, горизонтально)\n";
-    std::cout << "Важно: Корабли не должны касаться друг друга (даже углами)!\n";
+    std::cout << "You need to place 10 ships:\n";
+    std::cout << "  - 1 four-deck ship (****)\n";
+    std::cout << "  - 2 three-deck ships (***), (***)\n";
+    std::cout << "  - 3 two-deck ships (**), (**), (**)\n";
+    std::cout << "  - 4 one-deck ships (*), (*), (*), (*)\n\n";
+    std::cout << "Input format: size row column direction\n";
+    std::cout << "Example: 4 1 A H  (4-deck, row 1, column A, horizontally)\n";
+    std::cout << "Important: Ships must not touch each other (even at the corners)!\n";
     std::cout << "=================================================\n\n";
 }
