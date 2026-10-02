@@ -21,17 +21,17 @@ Ship::Ship(const Ship& other) : _size(other.size()), _coord(other._coord), _dire
 bool Ship::is_collision(int size, const Position& coord, Direction dir) const noexcept { //True - выходит за пределы поля
     if (dir == Horizontal) {
         //Вертикальное положение корабля проверяется в конструкторе Position
-        if ((coord.col() < 1) || (coord.col() + (size - 1) > Position::_max_col)) {
+        if ((coord.col() < 1) || (coord.col() + (size - 1) > coord.max_col())) {
             return true;
         }
         return false;
     }
     if (dir == Vertical) {
         //Часть корректности вертикального положения проверяется в конструкторе Position
-        if ((coord.row() + (size - 1)) > Position::_max_row) {
+        if ((coord.row() + (size - 1)) > coord.max_row()) {
             return true;
         }
-        else if ((coord.col() < 1) || (coord.col() > Position::_max_col)) {
+        else if ((coord.col() < 1) || (coord.col() > coord.max_col())) {
             return true;
         }
         return false;

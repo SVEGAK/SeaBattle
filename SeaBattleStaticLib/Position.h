@@ -25,8 +25,9 @@ public:
     static Position parse(const std::string& str);
     void row(int new_row);
     void col(int new_col);
+    int max_row() const noexcept { return _max_row; }
+    int max_col() const noexcept { return _max_col; }
     friend std::string to_string(const Position& pos);
-    friend class Ship;
     
 };
 const int Position::_max_row = 10;
